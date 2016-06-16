@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!-- Chess board rows and called files, labelled by numbers
+and the columns are called ranks, labelled by letters a-h -->
+<head>
+	<title>Chess ting</title>
+	<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+	<p id="test"> go fuck yourself </p>
+    <canvas id="myCanvas" width="800" height="800"></canvas>
+    <script>
+    	var canvas = document.getElementById('myCanvas');
+    	var context = canvas.getContext('2d');
+
+    	var currColour = false;
+    	for(var file=0; file<8; file++){
+	    	for(var rank=0; rank<8; rank++){
+
+				context.beginPath();
+				//x,y,width,height
+				context.rect( (rank*50), (file*50), 50, 50);
+				if(currColour){
+					context.fillStyle = 'white';
+				}
+				else {
+					context.fillStyle = 'black';
+				}
+				context.fill();
+				context.lineWidth = 2;
+				context.strokeStyle = 'black';
+				context.stroke();
+	  		
+	  			currColour = !currColour;
+	  		}
+  			currColour = !currColour;
+    	}
+    </script>
+
+</body>
+
+</html>
