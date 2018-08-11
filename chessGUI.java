@@ -1,15 +1,23 @@
 import javax.swing.*; //JPanel/containers/scrollpane
 import java.awt.*; //Dimension/colour/graphics
+
+import java.awt.image.BufferedImage;
+import java.io.*; //File and IOException
+import javax.imageio.ImageIO;
+
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+
+//got pieces from: https://commons.wikimedia.org/wiki/Category:PNG_chess_pieces/Standard_transparent
+
 public class chessGUI extends JPanel
 					implements KeyListener, MouseListener
 {
 	//colours
-	Color lightSqColour = Color.WHITE;
-	Color darkSqColour = Color.BLACK;
+	Color lightSqColour =  new Color(240,211,109); //Color.WHITE;
+	Color darkSqColour = new Color(167,123,88); //Color.BLACK;
 	Color whitePieceColour = Color.RED;
 	Color blackPieceColour = Color.BLUE;
 
@@ -69,6 +77,63 @@ public class chessGUI extends JPanel
 	}
 
 	public void paintPieces(Graphics g){
+
+		BufferedImage image = null;
+		BufferedImage resised = null;
+		// try{
+		// 	wPawn = ImageIO.read(new File ("pieceImages/whitePawn.png")); // BufferedImage(, "white pawn");
+		// 	//BufferedImage wPawnBig = new
+		// 	//test = (BufferedImage) wPawn.getScaledInstance(80, 80, Image.SCALE_DEFAULT);
+		// 	test = resize(wPawn, sqSize, sqSize);
+
+		// } 
+		// catch(IOException e){
+		// 	game.println( e.getMessage() );
+		// }
+		//g.drawImage(wPawn,0,0,null);
+		//g.drawImage(test, sqSize, sqSize, null);
+
+		String pathRoot = "pieceImages/";
+		String fileType = ".png";
+		for(int i = 0; i<8; i++){
+			for(int j=0; j<8; j++){
+				//use +/- and magnitude to construct filename string
+				String colour = "";
+				String pieceName = "";
+				int piece = game.board[i][j];
+				if(piece != 0) { //avoids file IO errors
+					if(piece>0) colour = "white";
+					if(piece<0) colour = "black";
+					switch(Math.abs(piece)){
+						case 1: pieceName = "King";
+						break;
+						case 2: pieceName = "Queen";
+						break;
+						case 3: pieceName = "Bishop";
+						break;
+						case 4: pieceName = "Knight";
+						break;
+						case 5: pieceName = "Rook";
+						break;
+						case 6: pieceName = "Pawn";
+						break;
+					}
+					try {
+						String filename = pathRoot + colour + pieceName + fileType; 
+						image = ImageIO.read(new File (filename));
+						resised = resize(image, sqSize, sqSize);
+						g.drawImage(resised, i*sqSize, j*sqSize, null);
+					} 
+					catch(IOException e){
+						game.println( e.getMessage() );
+					}
+				}
+			}
+		}
+
+
+
+		/* OLD PIECE DRAWING METHOD
 		g.setFont(new Font("Monospaced", Font.PLAIN, sqSize/2) );
 		//go through board and paint appropriate piece
 		for(int i = 0; i<8; i++){
@@ -102,7 +167,7 @@ public class chessGUI extends JPanel
 					}
 				}
 			}
-		}
+		}*/
 	}
 
 	public void mouseClicked(MouseEvent m){
@@ -172,6 +237,17 @@ public class chessGUI extends JPanel
 	}
 
 
+	//resizing function - CONSIDER RESISING AND SAVING ALL
+	//totally nicked from https://memorynotfound.com/java-resize-image-fixed-width-height-example/
+	private static BufferedImage resize(BufferedImage img, int height, int width) {
+        Image tmp = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        BufferedImage resized = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = resized.createGraphics();
+        g2d.drawImage(tmp, 0, 0, null);
+        g2d.dispose();
+        return resized;
+    }
+
 	//UNUSED listener functions
 	public void keyReleased(KeyEvent e){}
 	public void keyTyped(KeyEvent e){}
@@ -184,8 +260,8 @@ public class chessGUI extends JPanel
 
 
 class Frame extends JFrame {
-	static int frameWidth = 760; //windowWidth = 1000;
-	static int frameHeight = 760; //windowHeight = 600;  
+	static int frameWidth = 640; //720; //sqSize 90
+	static int frameHeight = 640; //720; //sqSize 90 
 
 	public Frame(){
 		setTitle("Chess");

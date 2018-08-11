@@ -1,21 +1,25 @@
 /*
 TODO
-Board setup:
-	8x8 Grid
-	enumerate piece types (remember promotion so no limit, perhaps 12 to include both colours) King, Queen, Bishop, Knight, Rook, Pawn
-	Pieces Placement
+	check check (for all board each enemy piece try move on king?)
+
 	Piece movement validation:
-		can the piece land on that square based on how it moves?
-		nothing blocking its way?
-		is the square occupied? - by own piece or enemy king
 		is own team now not in check? #pin #checkDefence
 
-		pawn en passant
 	Post movement checks:
 		Pawn promotion?
 		other team in check now? (use piece occupy king on next move using validation above?)
 
-	//highlight possible moves?
+	Pretty pieces
+
+	print move with correct notation
+	highlight possible moves?
+
+	Difficult rules:
+	castling
+	en passant
+	checkmate... (king cant move and *nothing block*)
+	stalemate	
+
 */
 public class chess {
 
