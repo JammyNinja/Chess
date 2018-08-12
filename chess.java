@@ -1,14 +1,15 @@
 /*
 TODO
 	Post movement checks:
-		Pawn promotion?
+		Pawn promotion
 		other team in check now? (use piece occupy king on next move using validation above?)
 
 
+	undo most recent move
 	print move with correct notation - keep match resume?
 	highlight possible moves?
-	undo most recent move
 	track captured pieces?
+
 	Difficult rules:
 	castling
 	en passant
@@ -17,10 +18,12 @@ TODO
 
 */
 import java.awt.Point;
+import java.io.Console;
 public class chess {
 
 	static chess game;
 	static chessGUI gui;
+	Console c;
 	int[][] board = new int[8][8];
 	String[] files = {"a","b","c","d","e","f","g","h"};
 	int turn; //1 white, -1 black
@@ -31,12 +34,17 @@ public class chess {
 		System.out.println("Welcome to Louis' Chess. Please do check it out, mate!");
 		game = new chess();
 		gui = new chessGUI(game);
-
 	}
 
 	public chess(){
 		setupBoard();
 		startGame();
+
+		c = System.console();
+		if (c == null) {
+            System.err.println("No console.");
+            System.exit(1);
+        }
 	}
 
 	//Positive numbers are white, negative are black, board 0,0 is top left
@@ -78,6 +86,7 @@ public class chess {
 
 	public void startGame(){
 		turn = 1;
+		
 	}
 
 	//return 1 if able to make the move
@@ -108,8 +117,9 @@ public class chess {
 		}
 
 		flipGlobalTurn();
+		betweenMoveChecks();
+		println("move successful!");
 		printBoard();
-		print("move successful!");
 		return 1;
 	}
 
@@ -286,12 +296,51 @@ public class chess {
 		if(inCheck)	return 1;
 		else return 0;
 	}
-
-	public void betweenMoveChecks(){
+	//returns 1 if play continues, 0 otherwise (stale or checkmate)
+	public int betweenMoveChecks(){
+		//promotion?
+		pawnPromotionCheck();
 		//opponent in check?
 		//checkmate?
 		//stalemate?
-		//promotion?
+		return 1;
+	}
+
+	void pawnPromotionCheck(){
+		for(int i=0;i<8;i++){
+			if(board[i][0] == 6){
+				//white pawn promotion!
+				board[i][0] = promotePawn();
+			}
+			if(board[i][7] == -6){
+				//black pawn promotion!
+				board[i][7] = -1 * promotePawn();
+			}
+		}
+	}
+	//returns value (not colour!) of which piece chosen to replace with
+	int promotePawn(){
+		//1 Queen 2 Bishop 3 Knight 4 Rook
+		//ask player what they want in form of number
+		println("Pawn promotion! What would you like?");
+		boolean pieceChosen = false;
+		int newPiece = 0;
+		do{
+			String answer = c.readLine("Enter 1 for a Queen, 2 for a Bishop, 3 for a Knight or 4 for a Rook.");
+			if(answer.equals("1") || answer.equals("2") || answer.equals("3") || answer.equals("4")){
+				newPiece = 1+ Integer.parseInt(answer);
+				pieceChosen = true;
+			} 
+			else{
+				println("PSYCH! That's the wrong numba!");
+			}
+		} while(!pieceChosen);
+
+		if(newPiece != 0) return newPiece;
+		else {
+			println("Pawn promotion error system meltdown!!!");
+			return -1;
+		}
 	}
 
 	public void movePiece(int x1, int y1, int x2, int y2){
@@ -306,10 +355,10 @@ public class chess {
 		board[x2][y2] = piece;
 		//remove piece from where it was
 		board[x1][y1] = 0;
-		//flip turn if indicated
-		//if (flipTurn) flipGlobalTurn();
 	}
+
 	void flipGlobalTurn(){
+
 		turn = -turn;
 	}
 	//perhaps pass it a board in particular?
