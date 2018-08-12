@@ -1,18 +1,17 @@
 /*
 TODO
-	check check (for all board each enemy piece try move on king?)
-
-	Piece movement validation:
-		is own team now not in check? #pin #checkDefence
+	Cleanup the ownteamincheck - makemove twice is nasty
+	perhaps pass it which king to check
+	makemove inadvance in trymove, and make it back if in check
 
 	Post movement checks:
 		Pawn promotion?
 		other team in check now? (use piece occupy king on next move using validation above?)
 
-	Pretty pieces
 
-	print move with correct notation
+	print move with correct notation - keep match resume?
 	highlight possible moves?
+	undo most recent move
 
 	Difficult rules:
 	castling
@@ -21,6 +20,7 @@ TODO
 	stalemate	
 
 */
+import java.awt.Point;
 public class chess {
 
 	static chess game;
@@ -28,6 +28,8 @@ public class chess {
 	int[][] board = new int[8][8];
 	String[] files = {"a","b","c","d","e","f","g","h"};
 	int turn; //1 white, -1 black
+	Point whiteKingPos = new Point(4,7);
+	Point blackKingPos = new Point(4,0);
 	
 	public static void main(String args[]){
 		System.out.println("Welcome to Louis' Chess. Please do check it out, mate!");
@@ -81,6 +83,7 @@ public class chess {
 	public void startGame(){
 		turn = 1;
 	}
+
 	//return 1 if able to make the move
 	public int tryMove(int fromX, int fromY, int destX, int destY){
 		int piece = board[fromX][fromY];
@@ -88,15 +91,37 @@ public class chess {
 		println("Trying move:" +game.files[fromX] + (8-fromY) + " to " + game.files[destX] + (8-destY));
 
 		//preMove
-		//is the square occupied by own piece or enemy king
+		//is the square occupied by own piece //or enemy king
 		if ( (piece < 0 && destSq < 0) || (piece > 0 && destSq > 0) ) return 0;
-		else if (Math.abs(destSq) == 1) return 0; //?!?! Peculiar, never in position to take their king if not check already = mate
+		//else if (Math.abs(destSq) == 1) return 0; //?!?! Peculiar, never in position to take their king if not check already = mate
 
-		//consider pre calculating abs(fromX-destX) and Y - only pawns care about direction
+		if( pieceMovementValidation(fromX,fromY,destX,destY) == 0) return 0;
+
+		//nothing blocking its way if not knight
+		if(Math.abs(piece) != 4) {
+			if ( checkBlock(fromX, fromY, destX, destY) == 0 ) return 0;
+		}
+
+		//after piece moves
+
+		//own team in check?
+		if(teamInCheck(fromX,fromY,destX,destY) == 1) return 0;
+
+		makeMove(fromX,fromY,destX,destY);
+		printBoard();
+		return 1;
+	}
+
+	//returns 0 if piece can't move there, 1 if can
+	public int pieceMovementValidation (int fromX, int fromY, int destX, int destY){
+		int piece = board[fromX][fromY];
+		int destSq = board[destX][destY];
+
+
+		//pre calculating abs(fromX-destX) and Y - only pawns care about direction
 		int magDifX = Math.abs(fromX - destX);
 		int magDifY = Math.abs(fromY - destY);
 
-		//could the piece land on that square based on how it moves?
 		switch(Math.abs(piece)){
 			case 1: //King
 				if(magDifX > 1 || magDifY > 1) return 0;
@@ -156,23 +181,14 @@ public class chess {
 				
 			break;
 		}
-
-		//nothing blocking its way if not knight
-		if(Math.abs(piece) != 4) {
-			int result = checkBlock(fromX, fromY, destX, destY);
-			if (result == 0) return 0;
-		}
-
-		//after piece moves
-		//own team in check?
-		makeMove(fromX,fromY,destX,destY);
 		return 1;
 	}
-	//returns 0 if there is a piece blocking
+
+	//returns 0 if there is a piece blocking, 1 if not
 	public int checkBlock(int x1, int y1, int x2, int y2)
 	{
 		//technically NESW precision doesnt matter but cba to fiddle with y1y2x1x2
-		println("checking block move [x1,y1] -> [x2,y2]: ["+x1+","+y1+"]" + "["+x2+","+y2+"]");
+		//println("checking block move [x1,y1] -> [x2,y2]: ["+x1+","+y1+"]" + "["+x2+","+y2+"]");
 		//vertical movement
 		if(x2-x1 == 0){
 			//northward movement
@@ -245,8 +261,45 @@ public class chess {
 		//else print sth
 		return 1;
 	}
+
+	//returns 1 if moving team in check after move, 0 if not
+	public int teamInCheck(int fromX, int fromY, int destX, int destY){
+		int piece = board[fromX][fromY];
+		Point kingPos = null;
+
+		//I dont like makeMove twice like that, consider flag on makeMove to flip turn or not
+
+		makeMove(fromX,fromY,destX,destY);
+		//decide crucial king position on temp board		
+		if(piece > 0) kingPos = whiteKingPos;
+		if(piece < 0) kingPos = blackKingPos;
+		
+		//check it worked...
+		if(kingPos == null) println("King position not found wtf");
+
+		boolean inCheck = false;
+		//check every square for a enemy piece
+		for(int i=0;i<8;i++){
+			for(int j=0;j<8;j++){
+				if(board[i][j] * piece < 0) {
+					//1*1 = 1, 0*1 = 0, 0*0 = 0
+					int result = pieceMovementValidation(i,j,kingPos.x,kingPos.y) * checkBlock(i,j,kingPos.x,kingPos.y);
+					if (result == 1) inCheck = true;
+				}
+			}
+		}
+		if(inCheck){
+			makeMove(destX,destY,fromX,fromY);
+			return 1;
+		}
+		else {
+			makeMove(destX,destY,fromX,fromY);
+			return 0;
+		}
+	}
+
 	public void betweenMoveChecks(){
-		//check?
+		//opponent in check?
 		//checkmate?
 		//stalemate?
 		//promotion?
@@ -255,6 +308,11 @@ public class chess {
 	public void makeMove(int x1, int y1, int x2, int y2){
 		//update board
 		int piece = board[x1][y1];
+
+		//if piece is king update global point!
+		if(piece ==  1) whiteKingPos = new Point (x2,y2);
+		if(piece == -1) blackKingPos = new Point (x2,y2);
+
 		//put it where it's going
 		board[x2][y2] = piece;
 		//remove piece from where it was

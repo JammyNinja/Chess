@@ -15,9 +15,9 @@ import java.awt.event.MouseListener;
 public class chessGUI extends JPanel
 					implements KeyListener, MouseListener
 {
-	//colours
-	Color lightSqColour =  new Color(240,211,109); //Color.WHITE;
-	Color darkSqColour = new Color(167,123,88); //Color.BLACK;
+	//colours mixed @ http://www.csfieldguide.org.nz/en/interactives/rgb-mixer/index.html
+	Color lightSqColour =  new Color(255,233,109);
+	Color darkSqColour = new Color(167,123,88);
 	Color whitePieceColour = Color.RED;
 	Color blackPieceColour = Color.BLUE;
 
