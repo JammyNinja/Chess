@@ -1,9 +1,5 @@
 /*
 TODO
-	Cleanup the ownteamincheck - makemove twice is nasty
-	perhaps pass it which king to check
-	makemove inadvance in trymove, and make it back if in check
-
 	Post movement checks:
 		Pawn promotion?
 		other team in check now? (use piece occupy king on next move using validation above?)
@@ -12,7 +8,7 @@ TODO
 	print move with correct notation - keep match resume?
 	highlight possible moves?
 	undo most recent move
-
+	track captured pieces?
 	Difficult rules:
 	castling
 	en passant
@@ -91,9 +87,8 @@ public class chess {
 		println("Trying move:" +game.files[fromX] + (8-fromY) + " to " + game.files[destX] + (8-destY));
 
 		//preMove
-		//is the square occupied by own piece //or enemy king
+		//is the square occupied by own piece
 		if ( (piece < 0 && destSq < 0) || (piece > 0 && destSq > 0) ) return 0;
-		//else if (Math.abs(destSq) == 1) return 0; //?!?! Peculiar, never in position to take their king if not check already = mate
 
 		if( pieceMovementValidation(fromX,fromY,destX,destY) == 0) return 0;
 
@@ -103,12 +98,18 @@ public class chess {
 		}
 
 		//after piece moves
+		movePiece(fromX,fromY,destX,destY);
+		//own team in check? if yes, undo move and break out of function
+		if(teamInCheck(turn) == 1) {
+			movePiece(destX,destY,fromX,fromY);
+			//if capture, replace piece
+			if(destSq != 0) board[destX][destY] = destSq;
+			return 0;
+		}
 
-		//own team in check?
-		if(teamInCheck(fromX,fromY,destX,destY) == 1) return 0;
-
-		makeMove(fromX,fromY,destX,destY);
+		flipGlobalTurn();
 		printBoard();
+		print("move successful!");
 		return 1;
 	}
 
@@ -263,39 +264,27 @@ public class chess {
 	}
 
 	//returns 1 if moving team in check after move, 0 if not
-	public int teamInCheck(int fromX, int fromY, int destX, int destY){
-		int piece = board[fromX][fromY];
+	public int teamInCheck(int turn){
 		Point kingPos = null;
 
-		//I dont like makeMove twice like that, consider flag on makeMove to flip turn or not
-
-		makeMove(fromX,fromY,destX,destY);
-		//decide crucial king position on temp board		
-		if(piece > 0) kingPos = whiteKingPos;
-		if(piece < 0) kingPos = blackKingPos;
-		
-		//check it worked...
+		//decide which king we're looking at		
+		if(turn > 0) kingPos = whiteKingPos;
+		if(turn < 0) kingPos = blackKingPos;
 		if(kingPos == null) println("King position not found wtf");
 
 		boolean inCheck = false;
 		//check every square for a enemy piece
 		for(int i=0;i<8;i++){
 			for(int j=0;j<8;j++){
-				if(board[i][j] * piece < 0) {
+				if(board[i][j] * turn < 0) {
 					//1*1 = 1, 0*1 = 0, 0*0 = 0
 					int result = pieceMovementValidation(i,j,kingPos.x,kingPos.y) * checkBlock(i,j,kingPos.x,kingPos.y);
 					if (result == 1) inCheck = true;
 				}
 			}
 		}
-		if(inCheck){
-			makeMove(destX,destY,fromX,fromY);
-			return 1;
-		}
-		else {
-			makeMove(destX,destY,fromX,fromY);
-			return 0;
-		}
+		if(inCheck)	return 1;
+		else return 0;
 	}
 
 	public void betweenMoveChecks(){
@@ -305,7 +294,7 @@ public class chess {
 		//promotion?
 	}
 
-	public void makeMove(int x1, int y1, int x2, int y2){
+	public void movePiece(int x1, int y1, int x2, int y2){
 		//update board
 		int piece = board[x1][y1];
 
@@ -317,10 +306,12 @@ public class chess {
 		board[x2][y2] = piece;
 		//remove piece from where it was
 		board[x1][y1] = 0;
-		//flip turn
+		//flip turn if indicated
+		//if (flipTurn) flipGlobalTurn();
+	}
+	void flipGlobalTurn(){
 		turn = -turn;
 	}
-
 	//perhaps pass it a board in particular?
 	void printBoard(){
 		System.out.println("|------------------------------|");
