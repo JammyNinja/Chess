@@ -1,9 +1,8 @@
 /*
 TODO
-	Post movement checks:
-		Pawn promotion
-		other team in check now? (use piece occupy king on next move using validation above?)
+current: move rook when castling	
 
+	Post movement checks:
 
 	undo most recent move
 	print move with correct notation - keep match resume?
@@ -27,8 +26,16 @@ public class chess {
 	int[][] board = new int[8][8];
 	String[] files = {"a","b","c","d","e","f","g","h"};
 	int turn; //1 white, -1 black
+
+	//track kings for checking checks
 	Point whiteKingPos = new Point(4,7);
 	Point blackKingPos = new Point(4,0);
+
+	//flags to check if King/Queenside castling possible
+	boolean whiteKSideCastlePoss = true;
+	boolean whiteQSideCastlePoss = true;
+	boolean blackKSideCastlePoss = true;
+	boolean blackQSideCastlePoss = true;
 	
 	public static void main(String args[]){
 		System.out.println("Welcome to Louis' Chess. Please do check it out, mate!");
@@ -99,6 +106,7 @@ public class chess {
 		//is the square occupied by own piece
 		if ( (piece < 0 && destSq < 0) || (piece > 0 && destSq > 0) ) return 0;
 
+		//check that the piece could move there
 		if( pieceMovementValidation(fromX,fromY,destX,destY) == 0) return 0;
 
 		//nothing blocking its way if not knight
@@ -106,8 +114,72 @@ public class chess {
 			if ( checkBlock(fromX, fromY, destX, destY) == 0 ) return 0;
 		}
 
+		//check castling
+		if(pieceMovementValidation(fromX,fromY,destX,destY) == -1){
+			println("CASTLING?!");
+			//boolean flags will catch if:
+			//king has moved
+			//or rook has moved or captured
+			
+			//if can then check if any enemy piece can touch journey square
+			int temp; //allows to return king position before acting on result
+
+			//white Kingside castle
+			if(destX == 6 && destY == 7) {
+				if(whiteKSideCastlePoss) {
+					//fake king position and check if team in check, then move him back
+					whiteKingPos = new Point(5,7);
+					temp = teamInCheck(1);
+					whiteKingPos = new Point(4,7);
+					if(temp == 1) return 0;
+					else println("white K side castle!");
+				}
+				else return 0;
+			}
+
+			//white Queenside castle
+			if(destX == 2 && destY == 7){
+				if(whiteQSideCastlePoss) {
+					//fake king position and check if team in check, then move him back
+					whiteKingPos = new Point(3,7);
+					temp = teamInCheck(1);
+					whiteKingPos = new Point(4,7);
+					if(temp == 1) return 0;
+					else println("white Q side castle!");
+				}
+				else return 0;
+			}
+
+			//black Kingside castle
+			if(destX == 6 && destY == 0){
+				if(blackKSideCastlePoss) {
+					//fake king position and check if team in check, then move him back
+					blackKingPos = new Point(5,0);
+					temp = teamInCheck(-1);
+					blackKingPos = new Point(4,0);
+					if (temp == 1) return 0;
+					else println("black K side castle!");
+				}
+				else return 0;
+			}
+
+			//black Queenside castle
+			if(destX == 2 && destY == 0){
+				if(blackQSideCastlePoss) {
+					//fake king position and check if team in check, then move him back
+					blackKingPos = new Point(3,0);
+					temp = teamInCheck(-1);
+					blackKingPos = new Point(4,0);
+					if (temp == 1) return 0;
+					else println("black Q side castle!");
+				}
+				else return 0;
+			}
+		}
+
 		//after piece moves
 		movePiece(fromX,fromY,destX,destY);
+
 		//own team in check? if yes, undo move and break out of function
 		if(teamInCheck(turn) == 1) {
 			movePiece(destX,destY,fromX,fromY);
@@ -119,11 +191,11 @@ public class chess {
 		flipGlobalTurn();
 		betweenMoveChecks();
 		println("move successful!");
-		printBoard();
+		//printBoard();
 		return 1;
 	}
 
-	//returns 0 if piece can't move there, 1 if can
+	//returns 0 if piece can't move there, 1 if can, -1 if castling attempt
 	public int pieceMovementValidation (int fromX, int fromY, int destX, int destY){
 		int piece = board[fromX][fromY];
 		int destSq = board[destX][destY];
@@ -135,7 +207,15 @@ public class chess {
 
 		switch(Math.abs(piece)){
 			case 1: //King
-				if(magDifX > 1 || magDifY > 1) return 0;
+				if(magDifX == 2 && magDifY == 0) {
+					if(fromX == 4){
+						if(fromY == 0 || fromY == 7){
+							return -1;
+						}
+					} //can only castle from home square
+					else return 0;
+				}
+				else if(magDifX > 1 || magDifY > 1) return 0;
 			break;
 
 			case 2: //Queen
@@ -297,10 +377,13 @@ public class chess {
 		else return 0;
 	}
 	//returns 1 if play continues, 0 otherwise (stale or checkmate)
+	//note that turn is flipped by this point
 	public int betweenMoveChecks(){
 		//promotion?
 		pawnPromotionCheck();
-		//opponent in check?
+		if(teamInCheck(turn) == 1){
+			println("Check!");
+		}
 		//checkmate?
 		//stalemate?
 		return 1;
@@ -347,9 +430,26 @@ public class chess {
 		//update board
 		int piece = board[x1][y1];
 
-		//if piece is king update global point!
-		if(piece ==  1) whiteKingPos = new Point (x2,y2);
-		if(piece == -1) blackKingPos = new Point (x2,y2);
+		//if piece is king update global point
+		//once king has moved (even if to castle) castling no longer possible
+		//if castling then move rook also!
+		if(piece ==  1) {
+			whiteKingPos = new Point (x2,y2);
+			whiteKSideCastlePoss = false;
+			whiteQSideCastlePoss = false;
+		}
+		if(piece == -1) {
+			blackKingPos = new Point (x2,y2);
+			blackKSideCastlePoss = false;
+			blackQSideCastlePoss = false;
+		}
+
+		//if any corner square implicated in moving, prevents castling that side
+		if( (x1 == 0 && y1 == 0) || (x2 == 0 && y2 == 0) ) blackQSideCastlePoss = false;
+		if( (x1 == 7 && y1 == 0) || (x2 == 7 && y2 == 0) ) blackKSideCastlePoss = false;
+		if( (x1 == 0 && y1 == 7) || (x2 == 0 && y2 == 7) ) whiteQSideCastlePoss = false;
+		if( (x1 == 7 && y1 == 7) || (x2 == 7 && y2 == 7) ) whiteKSideCastlePoss = false;
+
 
 		//put it where it's going
 		board[x2][y2] = piece;
