@@ -116,85 +116,8 @@ public class chess {
 
 		//check castling
 		if(pieceMovementValidation(fromX,fromY,destX,destY) == -1){
-			println("CASTLING?!");
-			//boolean flags will catch if:
-			//king has moved
-			//or rook has moved or captured
-			
-			//if can then check if any enemy piece can touch journey square
-			int temp = 0; //allows to return king position before acting on result
-
-			//white Kingside castle
-			if(destX == 6 && destY == 7) {
-				if(whiteKSideCastlePoss) {
-					//fake king position and check if team in check, then move him back
-					whiteKingPos = new Point(6,7);
-					temp += teamInCheck(1);
-					whiteKingPos = new Point(5,7);
-					temp += teamInCheck(1);
-					whiteKingPos = new Point(4,7);
-					if(temp > 0) return 0;
-					else {
-						movePiece(7,7, 5,7);
-						println("white K side castle!");
-					}
-				}
-				else return 0;
-			}
-
-			//white Queenside castle
-			if(destX == 2 && destY == 7){
-				if(whiteQSideCastlePoss) {
-					//fake king position and check if team in check, then move him back
-					whiteKingPos = new Point(2,7);
-					temp += teamInCheck(1);
-					whiteKingPos = new Point(3,7);
-					temp += teamInCheck(1);
-					whiteKingPos = new Point(4,7);
-					if(temp > 0) return 0;
-					else {
-						movePiece(0,7, 3,7);
-						println("white Q side castle!");
-					}
-				}
-				else return 0;
-			}
-
-			//black Kingside castle
-			if(destX == 6 && destY == 0){
-				if(blackKSideCastlePoss) {
-					//fake king position and check if team in check, then move him back
-					blackKingPos = new Point(6,0);
-					temp += teamInCheck(-1);
-					blackKingPos = new Point(5,0);
-					temp += teamInCheck(-1);
-					blackKingPos = new Point(4,0);
-					if (temp > 0) return 0;
-					else {
-						movePiece(7,0, 5,0);
-						println("black K side castle!");
-					}
-				}
-				else return 0;
-			}
-
-			//black Queenside castle
-			if(destX == 2 && destY == 0){
-				if(blackQSideCastlePoss) {
-					//fake king position and check if team in check, then move him back
-					blackKingPos = new Point(2,0);
-					temp += teamInCheck(-1);
-					blackKingPos = new Point(3,0);
-					temp += teamInCheck(-1);
-					blackKingPos = new Point(4,0);
-					if (temp > 0) return 0;
-					else {
-						movePiece(0,0, 3,0);
-						println("black Q side castle!");
-					}
-				}
-				else return 0;
-			}
+			println("attempting to castle...");
+			if( validateCastling(destX,destY) == 0) return 0;
 		}
 
 		//after piece moves
@@ -214,10 +137,87 @@ public class chess {
 		//printBoard();
 		return 1;
 	}
+	//returns 0 if not poss, 1 if poss
+	int validateCastling(int destX, int destY){
+		//boolean flags will catch if:
+		//king has moved
+		//or rook has moved or captured
+		
+		//if can then check if any enemy piece can touch journey square
+		int temp = 0; //allows to return king position before acting on result
 
-	int validateCastling(){
+		//white Kingside castle
+		if(destX == 6 && destY == 7) {
+			if(whiteKSideCastlePoss) {
+				//fake king position and check if team in check, then move him back
+				whiteKingPos = new Point(6,7);
+				temp += teamInCheck(1);
+				whiteKingPos = new Point(5,7);
+				temp += teamInCheck(1);
+				whiteKingPos = new Point(4,7);
+				if(temp > 0) return 0;
+				else {
+					movePiece(7,7, 5,7);
+					print("white King side castle");
+				}
+			}
+			else return 0;
+		}
 
+		//white Queenside castle
+		if(destX == 2 && destY == 7){
+			if(whiteQSideCastlePoss) {
+				//fake king position and check if team in check, then move him back
+				whiteKingPos = new Point(2,7);
+				temp += teamInCheck(1);
+				whiteKingPos = new Point(3,7);
+				temp += teamInCheck(1);
+				whiteKingPos = new Point(4,7);
+				if(temp > 0) return 0;
+				else {
+					movePiece(0,7, 3,7);
+					println("white Queen side castle");
+				}
+			}
+			else return 0;
+		}
 
+		//black Kingside castle
+		if(destX == 6 && destY == 0){
+			if(blackKSideCastlePoss) {
+				//fake king position and check if team in check, then move him back
+				blackKingPos = new Point(6,0);
+				temp += teamInCheck(-1);
+				blackKingPos = new Point(5,0);
+				temp += teamInCheck(-1);
+				blackKingPos = new Point(4,0);
+				if (temp > 0) return 0;
+				else {
+					movePiece(7,0, 5,0);
+					println("black King side castle");
+				}
+			}
+			else return 0;
+		}
+
+		//black Queenside castle
+		if(destX == 2 && destY == 0){
+			if(blackQSideCastlePoss) {
+				//fake king position and check if team in check, then move him back
+				blackKingPos = new Point(2,0);
+				temp += teamInCheck(-1);
+				blackKingPos = new Point(3,0);
+				temp += teamInCheck(-1);
+				blackKingPos = new Point(4,0);
+				if (temp > 0) return 0;
+				else {
+					movePiece(0,0, 3,0);
+					println("black Queen side castle");
+				}
+			}
+			else return 0;
+		}
+		println(" success!");
 		return 1;
 	}
 
