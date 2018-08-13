@@ -18,6 +18,8 @@ public class chessGUI extends JPanel
 	//colours mixed @ http://www.csfieldguide.org.nz/en/interactives/rgb-mixer/index.html
 	Color lightSqColour =  new Color(255,233,109);
 	Color darkSqColour = new Color(167,123,88);
+	Color highlightMoveColour = Color.CYAN;
+	Color highlightPieceColour = Color.RED;
 	Color whitePieceColour = Color.RED;
 	Color blackPieceColour = Color.BLUE;
 
@@ -66,7 +68,13 @@ public class chessGUI extends JPanel
 		for(int i = 0; i<=8; i++){
 			for(int j=0; j<=8; j++){
 				if(currentPiece != 0 && moveFromX == i && moveFromY == j){
-					g.setColor(Color.CYAN);
+					g.setColor(highlightPieceColour);
+				}
+				else if(game.lastMove[0].x == i && game.lastMove[0].y == j) {
+					g.setColor(highlightMoveColour);
+				}
+				else if(game.lastMove[1].x == i && game.lastMove[1].y == j) {
+					g.setColor(highlightMoveColour);
 				}
 				else if((i+j) %2 ==1) g.setColor(darkSqColour);
 				else g.setColor(lightSqColour);
@@ -80,18 +88,6 @@ public class chessGUI extends JPanel
 
 		BufferedImage image = null;
 		BufferedImage resised = null;
-		// try{
-		// 	wPawn = ImageIO.read(new File ("pieceImages/whitePawn.png")); // BufferedImage(, "white pawn");
-		// 	//BufferedImage wPawnBig = new
-		// 	//test = (BufferedImage) wPawn.getScaledInstance(80, 80, Image.SCALE_DEFAULT);
-		// 	test = resize(wPawn, sqSize, sqSize);
-
-		// } 
-		// catch(IOException e){
-		// 	game.println( e.getMessage() );
-		// }
-		//g.drawImage(wPawn,0,0,null);
-		//g.drawImage(test, sqSize, sqSize, null);
 
 		String pathRoot = "pieceImages/";
 		String fileType = ".png";

@@ -1,19 +1,23 @@
 /*
 TODO
-current: move rook when castling	
+current: en passant - check if its maybe happening
+	en passant if happening is it allowed
 
 	Post movement checks:
+	checkmate... (king cant move and *nothing block*)
+	stalemate
 
 	undo most recent move
 	print move with correct notation - keep match resume?
 	highlight possible moves?
+	highlight last move?
 	track captured pieces?
 
 	Difficult rules:
-	castling
+	DONE castling
+	DONE pawn promotion
 	en passant
-	checkmate... (king cant move and *nothing block*)
-	stalemate	
+		
 
 */
 import java.awt.Point;
@@ -26,6 +30,8 @@ public class chess {
 	int[][] board = new int[8][8];
 	String[] files = {"a","b","c","d","e","f","g","h"};
 	int turn; //1 white, -1 black
+
+	Point[] lastMove = {new Point(-1,-1) , new Point(-1,-1) } ;
 
 	//track kings for checking checks
 	Point whiteKingPos = new Point(4,7);
@@ -120,6 +126,12 @@ public class chess {
 			if( validateCastling(destX,destY) == 0) return 0;
 		}
 
+		//en passant?
+		if(pieceMovementValidation(fromX,fromY,destX,destY) == -2){
+			println("en passant?");
+			//enPassantValidation();
+		}
+
 		//after piece moves
 		movePiece(fromX,fromY,destX,destY);
 
@@ -138,6 +150,7 @@ public class chess {
 		return 1;
 	}
 	//returns 0 if not poss, 1 if poss
+	//technically moves rook before king, means king gets set as last move
 	int validateCastling(int destX, int destY){
 		//boolean flags will catch if:
 		//king has moved
@@ -221,7 +234,7 @@ public class chess {
 		return 1;
 	}
 
-	//returns 0 if piece can't move there, 1 if can, -1 if castling attempt
+	//returns 0 if piece can't move there, 1 if can, -1 if castling attempt, -2 if potential en passant
 	public int pieceMovementValidation (int fromX, int fromY, int destX, int destY){
 		int piece = board[fromX][fromY];
 		int destSq = board[destX][destY];
@@ -407,6 +420,7 @@ public class chess {
 	public int betweenMoveChecks(){
 		//promotion?
 		pawnPromotionCheck();
+		//check?
 		if(teamInCheck(turn) == 1){
 			println("Check!");
 		}
@@ -481,6 +495,11 @@ public class chess {
 		board[x2][y2] = piece;
 		//remove piece from where it was
 		board[x1][y1] = 0;
+		Point from = new Point(x1,y1);
+		Point to = new Point(x2,y2);
+
+		lastMove[0] = from;
+		lastMove[1] = to  ;
 	}
 
 	void flipGlobalTurn(){
