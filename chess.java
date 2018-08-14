@@ -3,20 +3,28 @@ TODO
 current: en passant - check if its maybe happening
 	en passant if happening is it allowed
 
+	highlighting past move in cyan still highlights when pinned, or when otherwise in check
+
+	consider remove piece function - would allow handling of removed pieces!
+
 	Post movement checks:
 	checkmate... (king cant move and *nothing block*)
 	stalemate
+
+	Draws!?
+	three move repition
+	offer draw?! lol
 
 	undo most recent move
 	print move with correct notation - keep match resume?
 	highlight possible moves?
 	highlight last move?
 	track captured pieces?
-
+	save game and load?
 	Difficult rules:
 	DONE castling
 	DONE pawn promotion
-	en passant
+	DONE en passant
 		
 
 */
@@ -31,8 +39,8 @@ public class chess {
 	String[] files = {"a","b","c","d","e","f","g","h"};
 	int turn; //1 white, -1 black
 
-	Point[] lastMove = {new Point(-1,-1) , new Point(-1,-1) } ;
-
+	Point[] lastMovePos = {new Point(-1,-1) , new Point(-1,-1) } ;
+	int lastMovePiece = 0 ;
 	//track kings for checking checks
 	Point whiteKingPos = new Point(4,7);
 	Point blackKingPos = new Point(4,0);
@@ -128,8 +136,11 @@ public class chess {
 
 		//en passant?
 		if(pieceMovementValidation(fromX,fromY,destX,destY) == -2){
-			println("en passant?");
-			//enPassantValidation();
+			println("en passant?!");
+			if( validateEnPassant(fromX,fromY,destX,destY) == 0){
+				return 0;
+			}
+
 		}
 
 		//after piece moves
@@ -149,6 +160,22 @@ public class chess {
 		//printBoard();
 		return 1;
 	}
+	//returns 1 if en passant, 0 if not;
+	int validateEnPassant(int fromX, int fromY, int destX, int destY){
+		//last move piece must be pawn double move,
+		//ps we already know we're currently moving a pawn
+		if(Math.abs(lastMovePos[0].y - lastMovePos[1].y) == 2 &&  destX == lastMovePos[0].x){
+			if(Math.abs(lastMovePiece) == 6){
+				println("en passant last moved piece was a pawn!");
+				board[lastMovePos[1].x][lastMovePos[1].y] = 0;
+				return 1;
+			}
+		}
+		else return 0;
+		//got to be attacking correct column
+		return 1;
+	}
+
 	//returns 0 if not poss, 1 if poss
 	//technically moves rook before king, means king gets set as last move
 	int validateCastling(int destX, int destY){
@@ -234,7 +261,8 @@ public class chess {
 		return 1;
 	}
 
-	//returns 0 if piece can't move there, 1 if can, -1 if castling attempt, -2 if potential en passant
+	//returns 0 if piece can't move there, 1 if can, 
+	// -1 if castling attempt, -2 if potential en passant
 	public int pieceMovementValidation (int fromX, int fromY, int destX, int destY){
 		int piece = board[fromX][fromY];
 		int destSq = board[destX][destY];
@@ -304,7 +332,17 @@ public class chess {
 
 					//will be en passant later!
 					//en passant!!? shitttt gonna need to know previous move
-					if(destSq == 0) return 0;
+					if(destSq == 0) {
+						if(destY == 2 && turn > 0){
+							//white enpassant attempt
+							return -2;
+						}
+						else if(destY == 5 && turn < 0){
+							//black en passant attempt
+							return -2;
+						}
+						else return 0;
+					}
 				}
 				//must capture diagonally by 1
 				if(destSq != 0 && magDifX != 1) return 0;
@@ -469,6 +507,7 @@ public class chess {
 	public void movePiece(int x1, int y1, int x2, int y2){
 		//update board
 		int piece = board[x1][y1];
+		lastMovePiece = piece;
 
 		//if piece is king update global point
 		//once king has moved (even if to castle) castling no longer possible
@@ -498,8 +537,8 @@ public class chess {
 		Point from = new Point(x1,y1);
 		Point to = new Point(x2,y2);
 
-		lastMove[0] = from;
-		lastMove[1] = to  ;
+		lastMovePos[0] = from;
+		lastMovePos[1] = to  ;
 	}
 
 	void flipGlobalTurn(){

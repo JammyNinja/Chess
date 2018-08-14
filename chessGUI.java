@@ -70,10 +70,10 @@ public class chessGUI extends JPanel
 				if(currentPiece != 0 && moveFromX == i && moveFromY == j){
 					g.setColor(highlightPieceColour);
 				}
-				else if(game.lastMove[0].x == i && game.lastMove[0].y == j) {
+				else if(game.lastMovePos[0].x == i && game.lastMovePos[0].y == j) {
 					g.setColor(highlightMoveColour);
 				}
-				else if(game.lastMove[1].x == i && game.lastMove[1].y == j) {
+				else if(game.lastMovePos[1].x == i && game.lastMovePos[1].y == j) {
 					g.setColor(highlightMoveColour);
 				}
 				else if((i+j) %2 ==1) g.setColor(darkSqColour);
