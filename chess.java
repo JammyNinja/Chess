@@ -1,10 +1,14 @@
 /*
 TODO
-current: en passant - check if its maybe happening
-	en passant if happening is it allowed
+current:
+
+	Bugs:
+	DONE King can move into pawn check!?
+	DONE can castle out of check atm
+	DONE castling can be done with knight there! queenside
 
 	highlighting past move in cyan still highlights when pinned, or when otherwise in check
-
+	- consider a more pretty highlighting move, a small cyan cicle for example, will allow for showing possible moves...
 	consider remove piece function - would allow handling of removed pieces!
 
 	Post movement checks:
@@ -15,12 +19,16 @@ current: en passant - check if its maybe happening
 	three move repition
 	offer draw?! lol
 
+	Potential features
 	undo most recent move
 	print move with correct notation - keep match resume?
 	highlight possible moves?
 	highlight last move?
 	track captured pieces?
 	save game and load?
+	flip board visually
+	debug flag
+
 	Difficult rules:
 	DONE castling
 	DONE pawn promotion
@@ -131,7 +139,10 @@ public class chess {
 		//check castling
 		if(pieceMovementValidation(fromX,fromY,destX,destY) == -1){
 			println("attempting to castle...");
-			if( validateCastling(destX,destY) == 0) return 0;
+			if( validateCastling(destX,destY) == 0) {
+				print("Can't Castle!");
+				return 0;
+			}
 		}
 
 		//en passant?
@@ -140,7 +151,6 @@ public class chess {
 			if( validateEnPassant(fromX,fromY,destX,destY) == 0){
 				return 0;
 			}
-
 		}
 
 		//after piece moves
@@ -179,10 +189,13 @@ public class chess {
 	//returns 0 if not poss, 1 if poss
 	//technically moves rook before king, means king gets set as last move
 	int validateCastling(int destX, int destY){
-		//boolean flags will catch if:
+		//boolean flags will have caught already if:
 		//king has moved
 		//or rook has moved or captured
 		
+		//cant castle if in check
+		if(teamInCheck(turn) == 1) return 0;
+
 		//if can then check if any enemy piece can touch journey square
 		int temp = 0; //allows to return king position before acting on result
 
@@ -214,6 +227,8 @@ public class chess {
 				temp += teamInCheck(1);
 				whiteKingPos = new Point(4,7);
 				if(temp > 0) return 0;
+				//rook cant be blocked either
+				if(board[1][7] != 0) return 0;
 				else {
 					movePiece(0,7, 3,7);
 					println("white Queen side castle");
@@ -250,6 +265,8 @@ public class chess {
 				temp += teamInCheck(-1);
 				blackKingPos = new Point(4,0);
 				if (temp > 0) return 0;
+				//rook cant be blocked either
+				if (board[1][0] != 0) return 0;
 				else {
 					movePiece(0,0, 3,0);
 					println("black Queen side castle");
@@ -312,11 +329,11 @@ public class chess {
 
 			case 6: //Pawn
 				//movement always forwards
-				if ( (turn > 0 && fromY-destY > 0) || (turn < 0 && fromY-destY < 0) ) ;
+				if ( (piece > 0 && fromY-destY > 0) || (piece < 0 && fromY-destY < 0) ) ;
 				else return 0;
 
-				//certainly cant be going sideways >1 or forward >2
-				if(magDifX > 1 || magDifY > 2) return 0;
+				//certainly cant be going sideways >1 or forward >2 or forward by 0
+				if(magDifX > 1 || magDifY > 2 || magDifY < 1) return 0;
 
 				//check initial double move
 				if(magDifY == 2) {
@@ -327,8 +344,10 @@ public class chess {
 
 				//capture
 				if(magDifX == 1){
-					if(turn > 0 && destSq > 0) return 0; //cant capture own piece
-					if(turn < 0 && destSq < 0) return 0;
+					//cant capture own piece
+					//if(turn > 0 && destSq > 0) return 0; 
+					//if(turn < 0 && destSq < 0) return 0;
+					if(piece * destSq > 0) return 0;
 
 					//will be en passant later!
 					//en passant!!? shitttt gonna need to know previous move
@@ -444,8 +463,15 @@ public class chess {
 		for(int i=0;i<8;i++){
 			for(int j=0;j<8;j++){
 				if(board[i][j] * turn < 0) {
-					//1*1 = 1, 0*1 = 0, 0*0 = 0
+					//1*1 = 1, 0*1 = 0, 0*0 = 0, but -1*1 < 0, so only checks enemy pieces
+					println("teamInCheck:");
 					int result = pieceMovementValidation(i,j,kingPos.x,kingPos.y) * checkBlock(i,j,kingPos.x,kingPos.y);
+					println("piece mov valid = " + pieceMovementValidation(i,j,kingPos.x,kingPos.y) );
+					if(pieceMovementValidation(i,j,kingPos.x,kingPos.y) == 1){
+						print("piece = " + board[i][j]);
+					}
+					println("check block = " + checkBlock(i,j,kingPos.x,kingPos.y) );
+					println("result = " + result);
 					if (result == 1) inCheck = true;
 				}
 			}
