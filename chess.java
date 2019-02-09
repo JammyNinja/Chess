@@ -1,11 +1,12 @@
 /*
 TODO
 current:
-
+	SAY WHEN ITS CHECKMATE. IT TAKES THE FUN OUT OF IT OTHERWISE. UNFINISHED.
 	Bugs:
 	DONE King can move into pawn check!?
 	DONE can castle out of check atm
 	DONE castling can be done with knight there! queenside
+	en passant not working?! 
 
 	highlighting past move in cyan still highlights when pinned, or when otherwise in check
 	- consider a more pretty highlighting move, a small cyan cicle for example, will allow for showing possible moves...
@@ -15,9 +16,11 @@ current:
 	checkmate... (king cant move and *nothing block*)
 	stalemate
 
+	write the letters and numbers on the board
 	Draws!?
 	three move repition
 	offer draw?! lol
+	not enough material for m8
 
 	Potential features
 	undo most recent move
